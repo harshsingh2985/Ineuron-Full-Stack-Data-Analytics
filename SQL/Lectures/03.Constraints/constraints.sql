@@ -111,7 +111,7 @@ INSERT INTO TEST5(TEST_ID, TEST_NAME, TEST_MAILID, TEST_ADDRESS, TEST_SALARY) VA
 (104, 'SUDHANSHU', 'SUDHANSHU@INEURON.AI', 'BANGALORE',50000);
 
 
-/* unique */
+/* 5. unique */
 -- the unique constraint demands only unique values only present in the specified column.
 CREATE TABLE IF NOT EXISTS TEST6 (
 	TEST_ID INT NOT NULL DEFAULT 0,
