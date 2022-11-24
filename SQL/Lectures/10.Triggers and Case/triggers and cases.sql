@@ -1,0 +1,300 @@
+/* ---------- TRIGGERS --------- */
+/*
+It is a stored program that invoked automatically during insert, update or delete operations.
+We can define a trigger that is invoked utomatically before a new row is inserted into a table.
+There are 3 types of Triggers:
+A. Before and After INSERT
+B. Before and After UPDATE
+C. Before and After DELETE
+*/
+
+
+CREATE DATABASE INEURON;
+USE INEURON;
+
+-- A. BEFORE INSERT
+-- create tables
+CREATE TABLE IF NOT EXISTS COURSE (
+	COURSE_ID INT,
+	COURSE_DESC VARCHAR(50),
+	COURSE_MENTOR VARCHAR(60),
+	COURSE_PRICE INT,
+	COURSE_DISCOUNT INT,
+	CREATE_DATE DATE
+);
+
+CREATE TABLE IF NOT EXISTS COURSE_UPDATE (
+	COURSE_MENTOR_UPDATE VARCHAR(50),
+	COURSE_PRICE_UPDATE INT,
+	COURSE_DISCOUNT_UPDATE INT
+);
+
+-- both the tables are empty
+SELECT * FROM COURSE;
+SELECT * FROM COURSE_UPDATE;
+
+-- now, insert a record into 'course' table
+INSERT INTO COURSE(COURSE_ID,COURSE_DESC,COURSE_MENTOR,COURSE_PRICE,COURSE_DISCOUNT)VALUE(101,"FSDA","SUDHANSHU",4000,10);
+
+-- one record inserted
+SELECT * FROM COURSE;
+
+-- create trigger
+DELIMITER &&
+CREATE TRIGGER RECORD_BEFORE_INSERT
+BEFORE INSERT
+ON COURSE FOR EACH ROW
+BEGIN
+	SET NEW.CREATE_DATE = SYSDATE();
+END; &&
+
+-- again insert the record
+INSERT INTO COURSE(COURSE_ID,COURSE_DESC,COURSE_MENTOR,COURSE_PRICE,COURSE_DISCOUNT)VALUE(101,"FSDA","SUDHANSHU",4000,10);
+
+-- If we check the table, we see that create_date column has automatically a record without inserting manually because of initiating the trigger.
+SELECT * FROM COURSE;
+
+====================================================
+-- create table
+CREATE TABLE IF NOT EXISTS COURSE2 (
+	COURSE_ID INT, 
+	COURSE_DESC VARCHAR(50),
+	COURSE_MENTOR VARCHAR(60),
+	COURSE_PRICE INT,
+	COURSE_DISCOUNT INT,
+	CREATE_DATE DATE,
+	USER_INFO VARCHAR(50)
+);
+
+-- query shows empty table
+SELECT * FROM COURSE2;
+
+-- Now, insert a record into the 'course2' table
+INSERT INTO COURSE2(COURSE_ID,COURSE_DESC,COURSE_MENTOR,COURSE_PRICE,COURSE_DISCOUNT)
+VALUE(101,"FSDA","SUDHANSHU",4000,10);
+
+-- one record inserted
+SELECT * FROM COURSE2;
+
+-- Initiate the trigger
+DELIMITER &&
+CREATE TRIGGER RECORD_BEFORE_INSERT2
+BEFORE INSERT 
+ON COURSE2 FOR EACH ROW
+BEGIN
+	DECLARE USER_VAL VARCHAR(50);
+	SET NEW.CREATE_DATE = SYSDATE();
+    SELECT USER() INTO USER_VAL;
+    SET NEW.USER_INFO = USER_VAL;
+END; &&
+
+SELECT USER();
+
+-- Now, again insert the record
+INSERT INTO COURSE2(COURSE_ID,COURSE_DESC,COURSE_MENTOR,COURSE_PRICE,COURSE_DISCOUNT)
+VALUE(101,"FSDA","SUDHANSHU",4000,10);
+
+-- Here, 'create_date' and 'user_info' column's values automatically inserted due to 'BEFORE_INSERT' trigger.
+SELECT * FROM COURSE2;
+
+
+/* create another table 'ref_course2' which is referencing to 'course_2' table */
+
+CREATE TABLE REF_COURSE2 (
+	RECORD_INSERT_DATE DATE,
+	RECORD_INSERT_USER VARCHAR(50)
+);
+
+-- query shows empty table
+SELECT * FROM REF_COURSE2;
+
+-- TRIGGER INITIATED
+DELIMITER &&
+CREATE TRIGGER RECORD_BEFORE_INSERT3
+BEFORE INSERT 
+ON COURSE2 FOR EACH ROW
+BEGIN
+	DECLARE USER_VAL VARCHAR(50);
+	SET NEW.CREATE_DATE = SYSDATE();
+    SELECT USER() INTO USER_VAL;
+    SET NEW.USER_INFO = USER_VAL;
+    INSERT INTO REF_COURSE2 VALUES(SYSDATE(), USER_VAL);
+END; &&
+
+-- insert record into course2
+INSERT INTO COURSE2(COURSE_ID,COURSE_DESC,COURSE_MENTOR,COURSE_PRICE,COURSE_DISCOUNT)
+VALUE(101,"FSDA","SUDHANSHU",4000,10);
+
+SELECT * FROM COURSE2;
+
+-- In the above table, we are inserting record into course2, simultaneously after initiating the trigger, record is inserted into 'ref_course2'.
+
+
+===================================================
+-- 3 tables are there.
+CREATE TABLE TEST1 (
+	C1 VARCHAR(50),
+    C2 DATE,
+    C3 INT
+);
+
+CREATE TABLE TEST2 (
+	C1 VARCHAR(50),
+    C2 DATE,
+    C3 INT
+);
+
+CREATE TABLE TEST3 (
+	C1 VARCHAR(50),
+    C2 DATE,
+    C3 INT
+);
+-- Q. How to update & delete in test2 and test3 when inserting records in test1 ?
+
+SELECT * FROM TEST1;
+SELECT * FROM TEST2;
+SELECT * FROM TEST3;
+-- above 3 tables are empty
+
+-- create trigger
+DELIMITER &&
+CREATE TRIGGER TO_UPDATE_OTHERS
+BEFORE INSERT ON TEST1 FOR EACH ROW
+BEGIN
+	INSERT INTO TEST2 VALUES('XYZ', SYSDATE(), 23354);
+    INSERT INTO TEST3 VALUES('XYZ', SYSDATE(), 23354);
+END; //
+
+
+-- now, insert record in test1 table
+INSERT INTO TEST1 VALUES ('SUDHANSHU', SYSDATE(), 234234);
+
+-- If we check the 3 tables, we see that we have inserted record into test1 table but due to trigger, 
+-- automatically records into test2 and test3 table are inserted.
+SELECT * FROM TEST1;
+SELECT * FROM TEST2;
+SELECT * FROM TEST3;
+
+
+-- B. AFTER INSERT
+
+-- create 3 tables
+CREATE TABLE TEST1 (
+	C1 VARCHAR(50),
+    C2 DATE,
+    C3 INT
+);
+
+CREATE TABLE TEST2 (
+	C1 VARCHAR(50),
+    C2 DATE,
+    C3 INT
+);
+
+CREATE TABLE TEST3 (
+	C1 VARCHAR(50),
+    C2 DATE,
+    C3 INT
+);
+
+
+SELECT * FROM TEST1;
+SELECT * FROM TEST2;
+SELECT * FROM TEST3;
+-- above 3 tables are empty
+
+-- insert records into tables
+INSERT INTO TEST2 VALUES('XYZ', SYSDATE(), 23354);
+INSERT INTO TEST3 VALUES('XYZ', SYSDATE(), 23354);
+INSERT INTO TEST1 VALUES('SUDHANSHU', SYSDATE(), 234234);
+
+-- create trigger(this trigger will get initiated after insert into test1 executed)
+DELIMITER //
+CREATE TRIGGER TO_UPDATE_OTHERS_TABLE
+AFTER INSERT ON TEST1 FOR EACH ROW
+BEGIN
+	UPDATE TEST2 SET C1 = 'ABC' WHERE C1 = 'XYZ';
+    DELETE FROM TEST3 WHERE C1 = 'XYZ';
+END; //
+
+INSERT INTO TEST1 VALUES('KRISH', SYSDATE(), 90077897);
+
+SELECT * FROM TEST1;
+SELECT * FROM TEST2;
+SELECT * FROM TEST3;
+
+-- C. AFTER DELETE
+
+-- create 3 tables
+CREATE TABLE TEST1 (
+	C1 VARCHAR(50),
+    C2 DATE,
+    C3 INT
+);
+
+CREATE TABLE TEST2 (
+	C1 VARCHAR(50),
+    C2 DATE,
+    C3 INT
+);
+
+CREATE TABLE TEST3 (
+	C1 VARCHAR(50),
+    C2 DATE,
+    C3 INT
+);
+
+DELIMITER &&
+CREATE TRIGGER TO_DELETE_OTHERS_TABLE
+AFTER DELETE ON TEST1 FOR EACH ROW
+BEGIN
+	INSERT INTO TEST3 VALUES('AFTER DELETE', SYSDATE(), 425456);
+END; &&
+
+DELETE FROM TEST1 WHERE C1 = 'KRISH';
+
+SELECT * FROM TEST1;
+SELECT * FROM TEST2;
+SELECT * FROM TEST3;
+
+
+-- D. BEFORE DELETE
+-- create 3 tables
+CREATE TABLE TEST11 (
+	C1 VARCHAR(50),
+    C2 DATE,
+    C3 INT
+);
+
+CREATE TABLE TEST12 (
+	C1 VARCHAR(50),
+    C2 DATE,
+    C3 INT
+);
+
+CREATE TABLE TEST13 (
+	C1 VARCHAR(50),
+    C2 DATE,
+    C3 INT
+);
+
+-- insert records
+INSERT INTO TEST11 VALUES('AFTER DELETE', SYSDATE(), 43456);
+INSERT INTO TEST11 VALUES('SUDHANSHU', SYSDATE(), 434547);
+INSERT INTO TEST11 VALUES('SUDH', SYSDATE(), 47256);
+
+SELECT * FROM TEST11;
+
+-- delete record
+DELETE FROM TEST11 WHERE C1 = 'SUDH';
+
+-- create trigger
+DELIMITER //
+CREATE TRIGGER TO_DELETE_OTHERS_BEFORE_OBSERVATION3
+BEFORE DELETE ON TEST11 FOR EACH ROW
+BEGIN
+	INSERT INTO TEST12(C1, C2, C3) VALUES(OLD.C1, OLD.C2, OLD.C3);
+END; //
+
+SELECT * FROM TEST11;
+SELECT * FROM TEST12;
