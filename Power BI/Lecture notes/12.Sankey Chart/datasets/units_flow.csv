@@ -1,0 +1,15 @@
+Destination,Source,Value
+Quality Test,Raw materials (in-house),100
+Quality Test,Raw materials (suppliers),200
+Quality Test,Materials (recycled),70
+Return to suppliers,Quality Test,30
+Mfg Unit 1,Quality Test,150
+Mfg Unit 2,Quality Test,70
+Mfg Unit 3,Quality Test,60
+QA 1,Mfg Unit 1,90
+QA 1,Mfg Unit 1,90
+QA 2,Mfg Unit 2,50
+QA 2,Mfg Unit 3,50
+Distribution,QA 1,160
+Distribution,QA 2,50
+Warehouse,QA 2,40
